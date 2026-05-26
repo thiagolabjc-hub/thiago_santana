@@ -63,6 +63,7 @@ function renderAdminTopo(string $tituloPagina): void
                 <?= itemMenuAdmin('config_landing.php', 'fa-pen-to-square', 'Landing'); ?>
                 <?= itemMenuAdmin('leads.php', 'fa-users', 'Leads'); ?>
                 <?= itemMenuAdmin('empresas.php', 'fa-building', 'Empresas'); ?>
+                <?= itemMenuAdmin('provisionamentos.php', 'fa-server', 'Provisionamentos'); ?>
                 <?= itemMenuAdmin('planos.php', 'fa-layer-group', 'Planos'); ?>
                 <?= itemMenuAdmin('contratos.php', 'fa-file-contract', 'Contratos'); ?>
                 <?= itemMenuAdmin('logs_master.php', 'fa-clock-rotate-left', 'Logs Master'); ?>
@@ -206,4 +207,37 @@ function selectPreparado(mysqli $conexao, string $sql, string $tipos = '', array
     $stmt->execute();
 
     return $stmt->get_result();
+}
+
+function slugValidoProvisionamento(string $slug): bool
+{
+    return preg_match('/^[a-z0-9-]+$/', $slug) === 1;
+}
+
+function nomeBancoValido(string $nomeBanco): bool
+{
+    return preg_match('/^[A-Za-z0-9_]+$/', $nomeBanco) === 1;
+}
+
+function identificadorBanco(string $nomeBanco): string
+{
+    if (!nomeBancoValido($nomeBanco)) {
+        throw new InvalidArgumentException('Nome de banco invalido.');
+    }
+
+    return '`' . str_replace('`', '``', $nomeBanco) . '`';
+}
+
+function registrarProvisionamento(mysqli $conexao, int $empresaId, string $status, string $etapa, string $mensagem): void
+{
+    try {
+        $stmt = $conexao->prepare(
+            'INSERT INTO provisionamentos (empresa_id, status, etapa, mensagem)
+             VALUES (?, ?, ?, ?)'
+        );
+        $stmt->bind_param('isss', $empresaId, $status, $etapa, $mensagem);
+        $stmt->execute();
+    } catch (Throwable $erro) {
+        return;
+    }
 }

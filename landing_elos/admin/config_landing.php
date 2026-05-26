@@ -58,6 +58,7 @@ try {
                 <a class="admin-menu-link active" href="config_landing.php"><i class="fa-solid fa-pen-to-square"></i><span>Landing</span></a>
                 <a class="admin-menu-link" href="leads.php"><i class="fa-solid fa-users"></i><span>Leads</span></a>
                 <a class="admin-menu-link" href="empresas.php"><i class="fa-solid fa-building"></i><span>Empresas</span></a>
+                <a class="admin-menu-link" href="provisionamentos.php"><i class="fa-solid fa-server"></i><span>Provisionamentos</span></a>
                 <a class="admin-menu-link" href="planos.php"><i class="fa-solid fa-layer-group"></i><span>Planos</span></a>
                 <a class="admin-menu-link" href="contratos.php"><i class="fa-solid fa-file-contract"></i><span>Contratos</span></a>
                 <a class="admin-menu-link" href="logs_master.php"><i class="fa-solid fa-clock-rotate-left"></i><span>Logs Master</span></a>

@@ -1,0 +1,26 @@
+CREATE TABLE IF NOT EXISTS usuariodb (
+    idUsuario INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(150) NOT NULL,
+    user VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(180) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    nivelAcesso VARCHAR(50) DEFAULT 'admin_empresa',
+    statusConta TINYINT DEFAULT 1,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS configuracoes_cliente (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome_empresa VARCHAR(180),
+    slug VARCHAR(100),
+    plano VARCHAR(120),
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS logs_cliente (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario VARCHAR(150),
+    acao VARCHAR(180),
+    detalhes TEXT,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

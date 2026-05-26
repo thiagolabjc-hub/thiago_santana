@@ -11,11 +11,14 @@ $metricas = [
     'empresas_ativas' => 0,
     'empresas_implantacao' => 0,
     'empresas_suspensas' => 0,
+    'ambientes_criados' => 0,
+    'ambientes_pendentes' => 0,
     'planos_ativos' => 0,
     'contratos_ativos' => 0,
 ];
 $ultimosLeads = [];
 $empresasRecentes = [];
+$empresasProvisionadas = [];
 $erroBanco = '';
 
 function contarDashboard(mysqli $conexao, string $sql): int
@@ -38,6 +41,8 @@ try {
     $metricas['empresas_ativas'] = contarDashboard($conexao, "SELECT COUNT(*) AS total FROM empresas WHERE status = 'ATIVA'");
     $metricas['empresas_implantacao'] = contarDashboard($conexao, "SELECT COUNT(*) AS total FROM empresas WHERE status = 'EM_IMPLANTACAO'");
     $metricas['empresas_suspensas'] = contarDashboard($conexao, "SELECT COUNT(*) AS total FROM empresas WHERE status = 'SUSPENSA'");
+    $metricas['ambientes_criados'] = contarDashboard($conexao, 'SELECT COUNT(*) AS total FROM empresas WHERE ambiente_criado = 1');
+    $metricas['ambientes_pendentes'] = contarDashboard($conexao, 'SELECT COUNT(*) AS total FROM empresas WHERE COALESCE(ambiente_criado, 0) = 0');
     $metricas['planos_ativos'] = contarDashboard($conexao, 'SELECT COUNT(*) AS total FROM planos WHERE status = 1');
     $metricas['contratos_ativos'] = contarDashboard($conexao, "SELECT COUNT(*) AS total FROM contratos WHERE status = 'ATIVO'");
 
@@ -66,6 +71,23 @@ try {
         }
     } catch (Throwable $erroEmpresas) {
         $empresasRecentes = [];
+    }
+
+    try {
+        $resultadoProvisionadas = $conexao->query(
+            'SELECT e.id, e.nome_empresa, e.slug, e.nome_banco, e.data_criacao_ambiente, p.nome_plano
+             FROM empresas e
+             LEFT JOIN planos p ON p.id = e.plano_id
+             WHERE e.ambiente_criado = 1
+             ORDER BY e.data_criacao_ambiente DESC
+             LIMIT 5'
+        );
+
+        while ($empresaProvisionada = $resultadoProvisionadas->fetch_assoc()) {
+            $empresasProvisionadas[] = $empresaProvisionada;
+        }
+    } catch (Throwable $erroProvisionadas) {
+        $empresasProvisionadas = [];
     }
 } catch (Throwable $erro) {
     $erroBanco = 'Nao foi possivel carregar os dados do painel.';
@@ -135,6 +157,20 @@ renderAdminTopo('Dashboard');
                 </div>
                 <div class="col-sm-6 col-xl-3">
                     <div class="metric-card">
+                        <span>Ambientes criados</span>
+                        <strong><?= e($metricas['ambientes_criados']); ?></strong>
+                        <small>Bancos de cliente provisionados</small>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="metric-card">
+                        <span>Ambientes pendentes</span>
+                        <strong><?= e($metricas['ambientes_pendentes']); ?></strong>
+                        <small>Empresas aguardando base propria</small>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="metric-card">
                         <span>Contratos ativos</span>
                         <strong><?= e($metricas['contratos_ativos']); ?></strong>
                         <small>Receita contratada</small>
@@ -145,6 +181,7 @@ renderAdminTopo('Dashboard');
                         <span>Atalhos</span>
                         <a href="empresas.php">Empresas</a>
                         <a href="planos.php">Planos</a>
+                        <a href="logs_master.php">Logs Master</a>
                     </div>
                 </div>
             </div>
@@ -229,6 +266,46 @@ renderAdminTopo('Dashboard');
                     </section>
                 </div>
             </div>
+
+            <section class="admin-panel mt-4">
+                <div class="panel-header">
+                    <div>
+                        <h2>Ultimas empresas provisionadas</h2>
+                        <p>Ambientes individuais criados pelo painel master.</p>
+                    </div>
+                    <a href="provisionamentos.php">Ver provisionamentos</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Empresa</th>
+                                <th>Plano</th>
+                                <th>Banco</th>
+                                <th>Data</th>
+                                <th>Acoes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!$empresasProvisionadas): ?>
+                                <tr><td colspan="5" class="text-muted">Nenhuma empresa provisionada ainda.</td></tr>
+                            <?php endif; ?>
+                            <?php foreach ($empresasProvisionadas as $empresaProvisionada): ?>
+                                <tr>
+                                    <td>
+                                        <strong><?= e($empresaProvisionada['nome_empresa']); ?></strong><br>
+                                        <small><?= e($empresaProvisionada['slug']); ?></small>
+                                    </td>
+                                    <td><?= e($empresaProvisionada['nome_plano'] ?: 'Sem plano'); ?></td>
+                                    <td><?= e($empresaProvisionada['nome_banco']); ?></td>
+                                    <td><?= e(date('d/m/Y H:i', strtotime($empresaProvisionada['data_criacao_ambiente']))); ?></td>
+                                    <td><a class="btn btn-outline-primary btn-sm" href="ambiente_empresa.php?id=<?= e($empresaProvisionada['id']); ?>"><i class="fa-solid fa-server me-1"></i>Ver</a></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     </main>
 <?php renderAdminRodape(); ?>

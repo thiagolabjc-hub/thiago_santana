@@ -43,7 +43,7 @@ try {
         $empresas[] = $empresa;
     }
 } catch (Throwable $erro) {
-    $erroBanco = 'Nao foi possivel carregar as empresas. Importe database/update_codex_2.sql se ainda nao fez isso.';
+    $erroBanco = 'Nao foi possivel carregar as empresas. Importe database/update_codex_2.sql e database/update_codex_3.sql se ainda nao fez isso.';
 }
 
 renderAdminTopo('Empresas');
@@ -103,15 +103,17 @@ renderAdminTopo('Empresas');
                                 <th>Plano</th>
                                 <th>Status</th>
                                 <th>Banco</th>
+                                <th>Ambiente</th>
                                 <th>Periodo</th>
                                 <th>Acoes</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (!$empresas): ?>
-                                <tr><td colspan="7" class="text-muted">Nenhuma empresa cadastrada.</td></tr>
+                                <tr><td colspan="8" class="text-muted">Nenhuma empresa cadastrada.</td></tr>
                             <?php endif; ?>
                             <?php foreach ($empresas as $empresa): ?>
+                                <?php $ambienteCriado = (int) ($empresa['ambiente_criado'] ?? 0) === 1; ?>
                                 <tr>
                                     <td>
                                         <strong><?= e($empresa['nome_empresa']); ?></strong><br>
@@ -128,6 +130,10 @@ renderAdminTopo('Empresas');
                                         <small><?= $empresa['senha_banco'] ? 'Senha cadastrada' : 'Sem senha cadastrada'; ?></small>
                                     </td>
                                     <td>
+                                        <?= $ambienteCriado ? badgeStatus('CONCLUIDO') : badgeStatus('PENDENTE'); ?><br>
+                                        <small><?= $ambienteCriado && !empty($empresa['data_criacao_ambiente']) ? e(date('d/m/Y H:i', strtotime($empresa['data_criacao_ambiente']))) : 'Aguardando provisionamento'; ?></small>
+                                    </td>
+                                    <td>
                                         <?= $empresa['data_inicio'] ? e(date('d/m/Y', strtotime($empresa['data_inicio']))) : 'Sem inicio'; ?><br>
                                         <small><?= $empresa['data_expiracao'] ? e(date('d/m/Y', strtotime($empresa['data_expiracao']))) : 'Sem expiracao'; ?></small>
                                     </td>
@@ -136,6 +142,11 @@ renderAdminTopo('Empresas');
                                             <i class="fa-solid fa-eye"></i>
                                         </button>
                                         <a class="btn btn-primary btn-sm" href="editar_empresa.php?id=<?= e($empresa['id']); ?>"><i class="fa-solid fa-pen"></i></a>
+                                        <?php if ($ambienteCriado): ?>
+                                            <a class="btn btn-outline-primary btn-sm" href="ambiente_empresa.php?id=<?= e($empresa['id']); ?>" title="Ver ambiente"><i class="fa-solid fa-server"></i></a>
+                                        <?php else: ?>
+                                            <a class="btn btn-outline-primary btn-sm" href="provisionar_empresa.php?id=<?= e($empresa['id']); ?>" title="Criar ambiente"><i class="fa-solid fa-circle-plus"></i></a>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -165,10 +176,17 @@ renderAdminTopo('Empresas');
                             <div class="col-md-6"><strong>Contato</strong><br><?= e($empresa['email_responsavel'] ?: ''); ?> <?= e($empresa['telefone_responsavel'] ?: ''); ?></div>
                             <div class="col-md-6"><strong>Subdominio</strong><br><?= e($empresa['subdominio'] ?: 'Nao informado'); ?></div>
                             <div class="col-md-6"><strong>Banco futuro</strong><br><?= e($empresa['nome_banco'] ?: 'Nao informado'); ?></div>
+                            <div class="col-md-6"><strong>Ambiente</strong><br><?= (int) ($empresa['ambiente_criado'] ?? 0) === 1 ? 'Criado' : 'Pendente'; ?></div>
+                            <div class="col-md-6"><strong>Admin inicial</strong><br><?= e($empresa['admin_cliente_email'] ?? 'Nao definido'); ?></div>
                             <div class="col-12"><strong>Observacoes</strong><br><?= nl2br(e($empresa['observacoes'] ?: 'Sem observacoes.')); ?></div>
                         </div>
                     </div>
                     <div class="modal-footer">
+                        <?php if ((int) ($empresa['ambiente_criado'] ?? 0) === 1): ?>
+                            <a class="btn btn-outline-primary" href="ambiente_empresa.php?id=<?= e($empresa['id']); ?>">Ver Ambiente</a>
+                        <?php else: ?>
+                            <a class="btn btn-outline-primary" href="provisionar_empresa.php?id=<?= e($empresa['id']); ?>">Criar Ambiente</a>
+                        <?php endif; ?>
                         <a class="btn btn-primary" href="editar_empresa.php?id=<?= e($empresa['id']); ?>">Editar</a>
                     </div>
                 </div>

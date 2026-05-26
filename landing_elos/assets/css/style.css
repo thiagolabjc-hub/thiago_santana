@@ -678,6 +678,26 @@ a:hover {
     background: #ecfccb;
 }
 
+.status-pendente {
+    color: #7c2d12;
+    background: #ffedd5;
+}
+
+.status-processando {
+    color: #1e3a8a;
+    background: #dbeafe;
+}
+
+.status-concluido {
+    color: #065f46;
+    background: #dcfce7;
+}
+
+.status-erro {
+    color: #7f1d1d;
+    background: #fee2e2;
+}
+
 .metric-card-action {
     display: grid;
     gap: 8px;
@@ -804,6 +824,33 @@ a:hover {
     width: 18px;
     height: 18px;
     accent-color: var(--cor-principal);
+}
+
+.summary-list {
+    display: grid;
+    gap: 12px;
+}
+
+.summary-list div {
+    padding: 14px;
+    background: #f8fbff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.summary-list span {
+    display: block;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.summary-list strong {
+    display: block;
+    margin-top: 5px;
+    color: var(--ink);
+    overflow-wrap: anywhere;
 }
 
 @media (max-width: 991.98px) {
