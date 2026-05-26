@@ -307,6 +307,11 @@ $linkWhatsApp = $digitosWhatsApp ? 'https://wa.me/' . $digitosWhatsApp : '';
                         <form class="lead-form" method="post" action="#demonstracao" novalidate>
                             <input type="hidden" name="acao" value="lead">
 
+                            <div class="form-heading">
+                                <h3>Formulario de contato</h3>
+                                <p>Preencha os dados abaixo para solicitar uma demonstracao.</p>
+                            </div>
+
                             <?php if ($mensagemSucesso): ?>
                                 <div class="alert alert-success" role="alert"><?= e($mensagemSucesso); ?></div>
                             <?php endif; ?>
@@ -318,23 +323,23 @@ $linkWhatsApp = $digitosWhatsApp ? 'https://wa.me/' . $digitosWhatsApp : '';
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label" for="nome">Nome</label>
-                                    <input class="form-control" id="nome" name="nome" type="text" value="<?= e($valoresFormulario['nome']); ?>" required>
+                                    <input class="form-control" id="nome" name="nome" type="text" value="<?= e($valoresFormulario['nome']); ?>" placeholder="Seu nome completo" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" for="empresa">Empresa</label>
-                                    <input class="form-control" id="empresa" name="empresa" type="text" value="<?= e($valoresFormulario['empresa']); ?>" required>
+                                    <input class="form-control" id="empresa" name="empresa" type="text" value="<?= e($valoresFormulario['empresa']); ?>" placeholder="Nome da empresa ou laboratorio" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" for="email">E-mail</label>
-                                    <input class="form-control" id="email" name="email" type="email" value="<?= e($valoresFormulario['email']); ?>" required>
+                                    <input class="form-control" id="email" name="email" type="email" value="<?= e($valoresFormulario['email']); ?>" placeholder="seuemail@empresa.com.br" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" for="telefone">Telefone</label>
-                                    <input class="form-control" id="telefone" name="telefone" type="text" value="<?= e($valoresFormulario['telefone']); ?>" required>
+                                    <input class="form-control" id="telefone" name="telefone" type="text" value="<?= e($valoresFormulario['telefone']); ?>" placeholder="(00) 00000-0000" required>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label" for="mensagem">Mensagem</label>
-                                    <textarea class="form-control" id="mensagem" name="mensagem" rows="4" required><?= e($valoresFormulario['mensagem']); ?></textarea>
+                                    <textarea class="form-control" id="mensagem" name="mensagem" rows="4" placeholder="Conte um pouco sobre sua operacao e o que deseja melhorar" required><?= e($valoresFormulario['mensagem']); ?></textarea>
                                 </div>
                                 <div class="col-12">
                                     <button class="btn btn-primary btn-lg w-100" type="submit">

@@ -428,6 +428,22 @@ a:hover {
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.16);
 }
 
+.form-heading {
+    margin-bottom: 22px;
+}
+
+.form-heading h3 {
+    margin: 0 0 6px;
+    color: var(--ink);
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.form-heading p {
+    margin: 0;
+    color: var(--muted);
+}
+
 .site-footer {
     padding: 28px 0;
     color: #64748b;
