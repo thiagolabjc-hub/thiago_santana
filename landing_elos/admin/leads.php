@@ -3,8 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/conexao.php';
 
-session_name('LANDING_ELOS_ADMIN');
-session_start();
+iniciarSessaoAdminElos();
 
 if (empty($_SESSION['landing_elos_admin_id'])) {
     header('Location: login.php');
@@ -42,14 +41,25 @@ try {
 </head>
 <body class="admin-page">
     <nav class="admin-topbar">
-        <div class="container d-flex align-items-center justify-content-between gap-3">
-            <a class="admin-logo" href="dashboard.php">
-                <span class="brand-mark"><img src="../assets/img/elos-favicon.png" alt=""></span>
-                <span>ELOS Admin</span>
-            </a>
-            <div class="admin-user">
-                <a class="btn btn-outline-primary btn-sm" href="dashboard.php"><i class="fa-solid fa-gauge-high me-1"></i>Dashboard</a>
-                <a class="btn btn-primary btn-sm" href="logout.php"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i>Sair</a>
+        <div class="container">
+            <div class="admin-topbar-row">
+                <a class="admin-logo" href="dashboard.php">
+                    <span class="brand-mark"><img src="../assets/img/elos-favicon.png" alt=""></span>
+                    <span>ELOS Master</span>
+                </a>
+                <div class="admin-user">
+                    <a class="btn btn-outline-primary btn-sm" href="../index.php" target="_blank" rel="noopener">Ver landing</a>
+                    <a class="btn btn-primary btn-sm" href="logout.php"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i>Sair</a>
+                </div>
+            </div>
+            <div class="admin-menu">
+                <a class="admin-menu-link" href="dashboard.php"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+                <a class="admin-menu-link" href="config_landing.php"><i class="fa-solid fa-pen-to-square"></i><span>Landing</span></a>
+                <a class="admin-menu-link active" href="leads.php"><i class="fa-solid fa-users"></i><span>Leads</span></a>
+                <a class="admin-menu-link" href="empresas.php"><i class="fa-solid fa-building"></i><span>Empresas</span></a>
+                <a class="admin-menu-link" href="planos.php"><i class="fa-solid fa-layer-group"></i><span>Planos</span></a>
+                <a class="admin-menu-link" href="contratos.php"><i class="fa-solid fa-file-contract"></i><span>Contratos</span></a>
+                <a class="admin-menu-link" href="logs_master.php"><i class="fa-solid fa-clock-rotate-left"></i><span>Logs Master</span></a>
             </div>
         </div>
     </nav>

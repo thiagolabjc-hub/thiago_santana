@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 
-session_name('LANDING_ELOS_ADMIN');
-session_start();
+require_once __DIR__ . '/../config/conexao.php';
+
+iniciarSessaoAdminElos();
 
 $_SESSION = [];
 

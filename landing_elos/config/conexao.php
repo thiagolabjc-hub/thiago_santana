@@ -8,6 +8,8 @@ define('DB_HOST', 'localhost');
 define('DB_USUARIO', 'root');
 define('DB_SENHA', '');
 define('DB_NOME', 'landing_elos');
+define('APP_MASTER_KEY', 'altere-esta-chave-master-elos-em-producao');
+define('APP_SESSION_PATH', __DIR__ . '/../storage/sessions');
 
 function obterConexao(): mysqli
 {
@@ -17,6 +19,21 @@ function obterConexao(): mysqli
     $conexao->set_charset('utf8mb4');
 
     return $conexao;
+}
+
+function iniciarSessaoAdminElos(): void
+{
+    if (session_status() !== PHP_SESSION_NONE) {
+        return;
+    }
+
+    if (!is_dir(APP_SESSION_PATH)) {
+        mkdir(APP_SESSION_PATH, 0755, true);
+    }
+
+    session_save_path(APP_SESSION_PATH);
+    session_name('LANDING_ELOS_ADMIN');
+    session_start();
 }
 
 function e($valor): string
@@ -93,4 +110,45 @@ function textoParaItens(string $texto): array
 function corCssSegura(string $cor, string $fallback): string
 {
     return preg_match('/^#[0-9a-fA-F]{6}$/', $cor) ? $cor : $fallback;
+}
+
+function criptografarValor(string $valor): string
+{
+    if ($valor === '') {
+        return '';
+    }
+
+    if (!function_exists('openssl_encrypt')) {
+        throw new RuntimeException('OpenSSL indisponivel para criptografia.');
+    }
+
+    $iv = random_bytes(16);
+    $chave = hash('sha256', APP_MASTER_KEY, true);
+    $criptografado = openssl_encrypt($valor, 'AES-256-CBC', $chave, OPENSSL_RAW_DATA, $iv);
+
+    if ($criptografado === false) {
+        throw new RuntimeException('Nao foi possivel criptografar o valor.');
+    }
+
+    return 'enc:v1:' . base64_encode($iv . $criptografado);
+}
+
+function descriptografarValor(string $valor): string
+{
+    if ($valor === '' || strpos($valor, 'enc:v1:') !== 0 || !function_exists('openssl_decrypt')) {
+        return '';
+    }
+
+    $dados = base64_decode(substr($valor, 7), true);
+
+    if ($dados === false || strlen($dados) <= 16) {
+        return '';
+    }
+
+    $iv = substr($dados, 0, 16);
+    $criptografado = substr($dados, 16);
+    $chave = hash('sha256', APP_MASTER_KEY, true);
+    $texto = openssl_decrypt($criptografado, 'AES-256-CBC', $chave, OPENSSL_RAW_DATA, $iv);
+
+    return $texto === false ? '' : $texto;
 }

@@ -3,8 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/conexao.php';
 
-session_name('LANDING_ELOS_ADMIN');
-session_start();
+iniciarSessaoAdminElos();
 
 if (!empty($_SESSION['landing_elos_admin_id'])) {
     header('Location: dashboard.php');
@@ -37,8 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_result($idUsuario, $nomeUsuario, $emailUsuario, $senhaHash, $nivelAcesso, $statusUsuario);
 
             if ($stmt->fetch() && $statusUsuario === 'ativo' && password_verify($senha, $senhaHash)) {
-                session_regenerate_id(true);
-
                 $_SESSION['landing_elos_admin_id'] = (int) $idUsuario;
                 $_SESSION['landing_elos_admin_nome'] = $nomeUsuario;
                 $_SESSION['landing_elos_admin_email'] = $emailUsuario;

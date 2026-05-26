@@ -3,8 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/conexao.php';
 
-session_name('LANDING_ELOS_ADMIN');
-session_start();
+iniciarSessaoAdminElos();
 
 if (empty($_SESSION['landing_elos_admin_id'])) {
     header('Location: login.php');

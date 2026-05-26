@@ -1,31 +1,45 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../config/conexao.php';
+require_once __DIR__ . '/includes/master.php';
 
-session_name('LANDING_ELOS_ADMIN');
-session_start();
+iniciarAdmin();
 
-if (empty($_SESSION['landing_elos_admin_id'])) {
-    header('Location: login.php');
-    exit;
-}
-
-$config = landingConfigPadrao();
-$totalLeads = 0;
+$metricas = [
+    'total_leads' => 0,
+    'total_empresas' => 0,
+    'empresas_ativas' => 0,
+    'empresas_implantacao' => 0,
+    'empresas_suspensas' => 0,
+    'planos_ativos' => 0,
+    'contratos_ativos' => 0,
+];
 $ultimosLeads = [];
+$empresasRecentes = [];
 $erroBanco = '';
+
+function contarDashboard(mysqli $conexao, string $sql): int
+{
+    try {
+        $resultado = $conexao->query($sql);
+        $linha = $resultado->fetch_assoc();
+
+        return (int) ($linha['total'] ?? 0);
+    } catch (Throwable $erro) {
+        return 0;
+    }
+}
 
 try {
     $conexao = obterConexao();
-    $resultadoTotal = $conexao->query('SELECT COUNT(*) AS total FROM leads');
-    $totalLeads = (int) ($resultadoTotal->fetch_assoc()['total'] ?? 0);
 
-    $resultadoConfig = $conexao->query('SELECT * FROM landing_config ORDER BY id DESC LIMIT 1');
-    $linhaConfig = $resultadoConfig->fetch_assoc();
-    if ($linhaConfig) {
-        $config = array_merge($config, $linhaConfig);
-    }
+    $metricas['total_leads'] = contarDashboard($conexao, 'SELECT COUNT(*) AS total FROM leads');
+    $metricas['total_empresas'] = contarDashboard($conexao, 'SELECT COUNT(*) AS total FROM empresas');
+    $metricas['empresas_ativas'] = contarDashboard($conexao, "SELECT COUNT(*) AS total FROM empresas WHERE status = 'ATIVA'");
+    $metricas['empresas_implantacao'] = contarDashboard($conexao, "SELECT COUNT(*) AS total FROM empresas WHERE status = 'EM_IMPLANTACAO'");
+    $metricas['empresas_suspensas'] = contarDashboard($conexao, "SELECT COUNT(*) AS total FROM empresas WHERE status = 'SUSPENSA'");
+    $metricas['planos_ativos'] = contarDashboard($conexao, 'SELECT COUNT(*) AS total FROM planos WHERE status = 1');
+    $metricas['contratos_ativos'] = contarDashboard($conexao, "SELECT COUNT(*) AS total FROM contratos WHERE status = 'ATIVO'");
 
     $resultadoLeads = $conexao->query(
         'SELECT nome, empresa, email, status, criado_em
@@ -37,46 +51,38 @@ try {
     while ($lead = $resultadoLeads->fetch_assoc()) {
         $ultimosLeads[] = $lead;
     }
+
+    try {
+        $resultadoEmpresas = $conexao->query(
+            'SELECT e.id, e.nome_empresa, e.slug, e.status, e.criado_em, p.nome_plano
+             FROM empresas e
+             LEFT JOIN planos p ON p.id = e.plano_id
+             ORDER BY e.criado_em DESC
+             LIMIT 5'
+        );
+
+        while ($empresa = $resultadoEmpresas->fetch_assoc()) {
+            $empresasRecentes[] = $empresa;
+        }
+    } catch (Throwable $erroEmpresas) {
+        $empresasRecentes = [];
+    }
 } catch (Throwable $erro) {
     $erroBanco = 'Nao foi possivel carregar os dados do painel.';
 }
-?>
-<!doctype html>
-<html lang="pt-BR">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard | ELOS</title>
-    <link rel="icon" type="image/png" href="../assets/img/elos-favicon.png">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <link href="../assets/css/style.css" rel="stylesheet">
-</head>
-<body class="admin-page">
-    <nav class="admin-topbar">
-        <div class="container d-flex align-items-center justify-content-between gap-3">
-            <a class="admin-logo" href="dashboard.php">
-                <span class="brand-mark"><img src="../assets/img/elos-favicon.png" alt=""></span>
-                <span>ELOS Admin</span>
-            </a>
-            <div class="admin-user">
-                <span><?= e($_SESSION['landing_elos_admin_nome'] ?? 'Administrador'); ?></span>
-                <a class="btn btn-outline-primary btn-sm" href="../index.php" target="_blank" rel="noopener">Ver landing</a>
-                <a class="btn btn-primary btn-sm" href="logout.php"><i class="fa-solid fa-arrow-right-from-bracket me-1"></i>Sair</a>
-            </div>
-        </div>
-    </nav>
 
+renderAdminTopo('Dashboard');
+?>
     <main class="admin-main">
         <div class="container">
             <div class="admin-heading">
                 <div>
-                    <span class="section-kicker">Dashboard</span>
-                    <h1>Painel da landing page</h1>
+                    <span class="section-kicker">Painel Master</span>
+                    <h1>Base comercial ELOS</h1>
                 </div>
                 <div class="admin-actions">
-                    <a class="btn btn-outline-primary" href="config_landing.php"><i class="fa-solid fa-pen-to-square me-2"></i>Editar landing</a>
-                    <a class="btn btn-primary" href="leads.php"><i class="fa-solid fa-users me-2"></i>Visualizar leads</a>
+                    <a class="btn btn-outline-primary" href="nova_empresa.php"><i class="fa-solid fa-building-circle-plus me-2"></i>Nova Empresa</a>
+                    <a class="btn btn-primary" href="novo_contrato.php"><i class="fa-solid fa-file-circle-plus me-2"></i>Novo Contrato</a>
                 </div>
             </div>
 
@@ -85,90 +91,144 @@ try {
             <?php endif; ?>
 
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-sm-6 col-xl-3">
                     <div class="metric-card">
                         <span>Total de leads</span>
-                        <strong><?= e($totalLeads); ?></strong>
-                        <small>Solicitacoes recebidas pela landing</small>
+                        <strong><?= e($metricas['total_leads']); ?></strong>
+                        <small>Solicitacoes comerciais</small>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-sm-6 col-xl-3">
                     <div class="metric-card">
-                        <span>Status da landing</span>
-                        <strong><?= e(ucfirst((string) $config['status'])); ?></strong>
-                        <small>Configuracao publica atual</small>
+                        <span>Total de empresas</span>
+                        <strong><?= e($metricas['total_empresas']); ?></strong>
+                        <small>Clientes cadastrados</small>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-sm-6 col-xl-3">
                     <div class="metric-card">
-                        <span>Sistema</span>
-                        <strong><?= e($config['nome_sistema']); ?></strong>
-                        <small><?= e($config['slogan']); ?></small>
+                        <span>Empresas ativas</span>
+                        <strong><?= e($metricas['empresas_ativas']); ?></strong>
+                        <small>Operando comercialmente</small>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="metric-card">
+                        <span>Em implantacao</span>
+                        <strong><?= e($metricas['empresas_implantacao']); ?></strong>
+                        <small>Novas contas em setup</small>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="metric-card">
+                        <span>Suspensas</span>
+                        <strong><?= e($metricas['empresas_suspensas']); ?></strong>
+                        <small>Contas com restricao</small>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="metric-card">
+                        <span>Planos ativos</span>
+                        <strong><?= e($metricas['planos_ativos']); ?></strong>
+                        <small>Ofertas comercializaveis</small>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="metric-card">
+                        <span>Contratos ativos</span>
+                        <strong><?= e($metricas['contratos_ativos']); ?></strong>
+                        <small>Receita contratada</small>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="metric-card metric-card-action">
+                        <span>Atalhos</span>
+                        <a href="empresas.php">Empresas</a>
+                        <a href="planos.php">Planos</a>
                     </div>
                 </div>
             </div>
 
-            <section class="admin-panel mt-4">
-                <div class="panel-header">
-                    <div>
-                        <h2>Resumo da landing</h2>
-                        <p><?= e($config['titulo_principal']); ?></p>
-                    </div>
-                    <span class="status-pill status-<?= e((string) $config['status']); ?>"><?= e((string) $config['status']); ?></span>
-                </div>
-                <div class="row g-3">
-                    <div class="col-lg-6">
-                        <div class="summary-box">
-                            <span>Chamada principal</span>
-                            <p><?= e($config['subtitulo']); ?></p>
+            <div class="row g-4 mt-1">
+                <div class="col-xl-6">
+                    <section class="admin-panel h-100">
+                        <div class="panel-header">
+                            <div>
+                                <h2>Leads recentes</h2>
+                                <p>Ultimas solicitacoes recebidas pela landing.</p>
+                            </div>
+                            <a href="leads.php">Ver todos</a>
                         </div>
-                    </div>
-                    <div class="col-lg-6">
-                        <div class="summary-box">
-                            <span>Chamada final</span>
-                            <p><?= e($config['texto_chamada_final']); ?></p>
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Empresa</th>
+                                        <th>Status</th>
+                                        <th>Data</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (!$ultimosLeads): ?>
+                                        <tr><td colspan="4" class="text-muted">Nenhum lead recebido ainda.</td></tr>
+                                    <?php endif; ?>
+                                    <?php foreach ($ultimosLeads as $lead): ?>
+                                        <tr>
+                                            <td>
+                                                <strong><?= e($lead['nome']); ?></strong><br>
+                                                <small><?= e($lead['email']); ?></small>
+                                            </td>
+                                            <td><?= e($lead['empresa']); ?></td>
+                                            <td><?= badgeStatus((string) $lead['status']); ?></td>
+                                            <td><?= e(date('d/m/Y H:i', strtotime($lead['criado_em']))); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
+                    </section>
                 </div>
-            </section>
-
-            <section class="admin-panel mt-4">
-                <div class="panel-header">
-                    <div>
-                        <h2>Leads recentes</h2>
-                        <p>Ultimas solicitacoes recebidas.</p>
-                    </div>
-                    <a href="leads.php">Ver todos</a>
+                <div class="col-xl-6">
+                    <section class="admin-panel h-100">
+                        <div class="panel-header">
+                            <div>
+                                <h2>Empresas recentes</h2>
+                                <p>Novas contas cadastradas no master comercial.</p>
+                            </div>
+                            <a href="empresas.php">Ver todas</a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Empresa</th>
+                                        <th>Plano</th>
+                                        <th>Status</th>
+                                        <th>Data</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (!$empresasRecentes): ?>
+                                        <tr><td colspan="4" class="text-muted">Nenhuma empresa cadastrada ainda.</td></tr>
+                                    <?php endif; ?>
+                                    <?php foreach ($empresasRecentes as $empresa): ?>
+                                        <tr>
+                                            <td>
+                                                <strong><?= e($empresa['nome_empresa']); ?></strong><br>
+                                                <small><?= e($empresa['slug']); ?></small>
+                                            </td>
+                                            <td><?= e($empresa['nome_plano'] ?: 'Sem plano'); ?></td>
+                                            <td><?= badgeStatus((string) $empresa['status']); ?></td>
+                                            <td><?= e(date('d/m/Y', strtotime($empresa['criado_em']))); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Empresa</th>
-                                <th>E-mail</th>
-                                <th>Status</th>
-                                <th>Data</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!$ultimosLeads): ?>
-                                <tr><td colspan="5" class="text-muted">Nenhum lead recebido ainda.</td></tr>
-                            <?php endif; ?>
-                            <?php foreach ($ultimosLeads as $lead): ?>
-                                <tr>
-                                    <td><?= e($lead['nome']); ?></td>
-                                    <td><?= e($lead['empresa']); ?></td>
-                                    <td><?= e($lead['email']); ?></td>
-                                    <td><span class="status-pill status-<?= e($lead['status']); ?>"><?= e($lead['status']); ?></span></td>
-                                    <td><?= e(date('d/m/Y H:i', strtotime($lead['criado_em']))); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            </div>
         </div>
     </main>
-</body>
-</html>
+<?php renderAdminRodape(); ?>
