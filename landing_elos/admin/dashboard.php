@@ -13,12 +13,15 @@ $metricas = [
     'empresas_suspensas' => 0,
     'ambientes_criados' => 0,
     'ambientes_pendentes' => 0,
+    'empresas_com_banco' => 0,
+    'empresas_sem_banco' => 0,
     'planos_ativos' => 0,
     'contratos_ativos' => 0,
 ];
 $ultimosLeads = [];
 $empresasRecentes = [];
 $empresasProvisionadas = [];
+$ultimosTestesConexao = [];
 $erroBanco = '';
 
 function contarDashboard(mysqli $conexao, string $sql): int
@@ -43,6 +46,8 @@ try {
     $metricas['empresas_suspensas'] = contarDashboard($conexao, "SELECT COUNT(*) AS total FROM empresas WHERE status = 'SUSPENSA'");
     $metricas['ambientes_criados'] = contarDashboard($conexao, 'SELECT COUNT(*) AS total FROM empresas WHERE ambiente_criado = 1');
     $metricas['ambientes_pendentes'] = contarDashboard($conexao, 'SELECT COUNT(*) AS total FROM empresas WHERE COALESCE(ambiente_criado, 0) = 0');
+    $metricas['empresas_com_banco'] = contarDashboard($conexao, "SELECT COUNT(*) AS total FROM empresas WHERE TRIM(COALESCE(nome_banco, '')) <> ''");
+    $metricas['empresas_sem_banco'] = contarDashboard($conexao, "SELECT COUNT(*) AS total FROM empresas WHERE TRIM(COALESCE(nome_banco, '')) = ''");
     $metricas['planos_ativos'] = contarDashboard($conexao, 'SELECT COUNT(*) AS total FROM planos WHERE status = 1');
     $metricas['contratos_ativos'] = contarDashboard($conexao, "SELECT COUNT(*) AS total FROM contratos WHERE status = 'ATIVO'");
 
@@ -88,6 +93,23 @@ try {
         }
     } catch (Throwable $erroProvisionadas) {
         $empresasProvisionadas = [];
+    }
+
+    try {
+        $resultadoTestes = $conexao->query(
+            "SELECT l.acao, l.entidade_id, l.detalhes, l.ip, l.criado_em, e.nome_empresa, e.slug
+             FROM logs_master l
+             LEFT JOIN empresas e ON e.id = l.entidade_id
+             WHERE l.acao LIKE '%conexao%' OR l.acao LIKE '%acesso bloqueado%'
+             ORDER BY l.criado_em DESC
+             LIMIT 5"
+        );
+
+        while ($teste = $resultadoTestes->fetch_assoc()) {
+            $ultimosTestesConexao[] = $teste;
+        }
+    } catch (Throwable $erroTestes) {
+        $ultimosTestesConexao = [];
     }
 } catch (Throwable $erro) {
     $erroBanco = 'Nao foi possivel carregar os dados do painel.';
@@ -167,6 +189,20 @@ renderAdminTopo('Dashboard');
                         <span>Ambientes pendentes</span>
                         <strong><?= e($metricas['ambientes_pendentes']); ?></strong>
                         <small>Empresas aguardando base propria</small>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="metric-card">
+                        <span>Com banco configurado</span>
+                        <strong><?= e($metricas['empresas_com_banco']); ?></strong>
+                        <small>Empresas com nome_banco preenchido</small>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xl-3">
+                    <div class="metric-card">
+                        <span>Sem banco configurado</span>
+                        <strong><?= e($metricas['empresas_sem_banco']); ?></strong>
+                        <small>Empresas aguardando configuracao</small>
                     </div>
                 </div>
                 <div class="col-sm-6 col-xl-3">
@@ -300,6 +336,46 @@ renderAdminTopo('Dashboard');
                                     <td><?= e($empresaProvisionada['nome_banco']); ?></td>
                                     <td><?= e(date('d/m/Y H:i', strtotime($empresaProvisionada['data_criacao_ambiente']))); ?></td>
                                     <td><a class="btn btn-outline-primary btn-sm" href="ambiente_empresa.php?id=<?= e($empresaProvisionada['id']); ?>"><i class="fa-solid fa-server me-1"></i>Ver</a></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="admin-panel mt-4">
+                <div class="panel-header">
+                    <div>
+                        <h2>Ultimos testes de conexao</h2>
+                        <p>Eventos recentes da camada multi-tenant.</p>
+                    </div>
+                    <a href="logs_master.php">Ver logs</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Empresa</th>
+                                <th>Acao</th>
+                                <th>Detalhes</th>
+                                <th>IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!$ultimosTestesConexao): ?>
+                                <tr><td colspan="5" class="text-muted">Nenhum teste de conexao registrado ainda.</td></tr>
+                            <?php endif; ?>
+                            <?php foreach ($ultimosTestesConexao as $teste): ?>
+                                <tr>
+                                    <td><?= e(date('d/m/Y H:i', strtotime($teste['criado_em']))); ?></td>
+                                    <td>
+                                        <strong><?= e($teste['nome_empresa'] ?: 'Nao identificada'); ?></strong><br>
+                                        <small><?= e($teste['slug'] ?: ''); ?></small>
+                                    </td>
+                                    <td><?= e($teste['acao']); ?></td>
+                                    <td class="lead-message"><?= nl2br(e($teste['detalhes'] ?: '-')); ?></td>
+                                    <td><?= e($teste['ip'] ?: '-'); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

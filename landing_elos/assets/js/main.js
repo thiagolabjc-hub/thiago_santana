@@ -40,6 +40,12 @@
         });
     });
 
+    if (window.bootstrap && window.bootstrap.Popover) {
+        document.querySelectorAll('[data-bs-toggle="popover"]').forEach(function (elemento) {
+            new window.bootstrap.Popover(elemento);
+        });
+    }
+
     var inputBanner = document.querySelector('#imagem_banner');
     var previewBanner = document.querySelector('.banner-preview');
 

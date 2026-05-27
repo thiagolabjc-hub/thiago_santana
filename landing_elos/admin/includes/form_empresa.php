@@ -45,7 +45,21 @@ $statusEmpresas = ['ATIVA', 'EM_IMPLANTACAO', 'SUSPENSA', 'CANCELADA'];
             </div>
 
             <div class="form-section">
-                <h2>Dados para banco futuro</h2>
+                <div class="form-section-title">
+                    <h2>Dados do banco da empresa</h2>
+                    <button
+                        class="info-popover-button"
+                        type="button"
+                        aria-label="Como estes dados serao utilizados"
+                        data-bs-toggle="popover"
+                        data-bs-trigger="hover focus"
+                        data-bs-placement="top"
+                        data-bs-title="Como estes dados serao utilizados"
+                        data-bs-content="O nome do banco identifica a base individual da empresa no provisionamento, no teste de conexao e na area do cliente. Ao criar o ambiente, o sistema cria o banco e, se usuario e senha estiverem preenchidos, cria tambem a credencial MySQL dedicada e libera acesso a esse banco. Se usuario e senha ficarem vazios, o sistema usa a credencial padrao da aplicacao. A senha nunca e exibida nas listagens."
+                    >
+                        <i class="fa-solid fa-circle-info"></i>
+                    </button>
+                </div>
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label" for="nome_banco">Nome do banco</label>

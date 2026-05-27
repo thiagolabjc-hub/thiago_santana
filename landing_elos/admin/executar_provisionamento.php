@@ -42,6 +42,39 @@ function executarTemplateCliente(mysqli $cliente, string $arquivoSql): void
     }
 }
 
+function usuarioBancoProvisionamentoValido(string $usuario): bool
+{
+    return preg_match('/^[A-Za-z0-9_-]{1,80}$/', $usuario) === 1;
+}
+
+function literalSql(mysqli $conexao, string $valor): string
+{
+    return "'" . $conexao->real_escape_string($valor) . "'";
+}
+
+function criarUsuarioBancoCliente(mysqli $cliente, string $nomeBanco, string $usuarioBanco, string $senhaBanco): void
+{
+    if (!nomeBancoValido($nomeBanco) || !usuarioBancoProvisionamentoValido($usuarioBanco) || $senhaBanco === '') {
+        throw new RuntimeException('Credencial dedicada de banco invalida.');
+    }
+
+    $identificadorBanco = identificadorBanco($nomeBanco);
+    $usuarioLiteral = literalSql($cliente, $usuarioBanco);
+    $hostLiteral = literalSql($cliente, 'localhost');
+    $senhaLiteral = literalSql($cliente, $senhaBanco);
+
+    $cliente->query("CREATE USER IF NOT EXISTS {$usuarioLiteral}@{$hostLiteral} IDENTIFIED BY {$senhaLiteral}");
+
+    try {
+        $cliente->query("ALTER USER {$usuarioLiteral}@{$hostLiteral} IDENTIFIED BY {$senhaLiteral}");
+    } catch (Throwable $erroAlterUser) {
+        $cliente->query("SET PASSWORD FOR {$usuarioLiteral}@{$hostLiteral} = PASSWORD({$senhaLiteral})");
+    }
+
+    $cliente->query("GRANT ALL PRIVILEGES ON {$identificadorBanco}.* TO {$usuarioLiteral}@{$hostLiteral}");
+    $cliente->query('FLUSH PRIVILEGES');
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: empresas.php');
     exit;
@@ -104,6 +137,18 @@ try {
     $hashAdmin = password_hash($senhaTemporaria, PASSWORD_DEFAULT);
     $templateSql = __DIR__ . '/../templates/cliente_base/install_cliente_base.sql';
     $identificadorBanco = identificadorBanco($nomeBanco);
+    $usuarioBancoCliente = trim((string) ($empresa['usuario_banco'] ?? ''));
+    $senhaBancoCliente = trim((string) ($empresa['senha_banco'] ?? '')) !== ''
+        ? descriptografarValor((string) $empresa['senha_banco'])
+        : '';
+
+    if ($usuarioBancoCliente !== '' && !usuarioBancoProvisionamentoValido($usuarioBancoCliente)) {
+        redirecionarProvisionamentoErro($empresaId, 'Usuario do banco invalido. Use apenas letras, numeros, hifen e underline.');
+    }
+
+    if ($usuarioBancoCliente !== '' && $senhaBancoCliente === '') {
+        redirecionarProvisionamentoErro($empresaId, 'Informe a senha do banco para criar a credencial dedicada.');
+    }
 
     $etapaAtual = 'Inicio';
     registrarProvisionamento($central, $empresaId, 'PROCESSANDO', $etapaAtual, 'Provisionamento iniciado.');
@@ -121,6 +166,13 @@ try {
     $cliente->select_db($nomeBanco);
     registrarProvisionamento($central, $empresaId, 'PROCESSANDO', $etapaAtual, 'Banco do cliente criado ou validado.');
     registrarLogMaster('Criacao do banco do cliente', 'empresas', $empresaId, 'Banco: ' . $nomeBanco, $central);
+
+    if ($usuarioBancoCliente !== '') {
+        $etapaAtual = 'Criacao do usuario do banco';
+        criarUsuarioBancoCliente($cliente, $nomeBanco, $usuarioBancoCliente, $senhaBancoCliente);
+        registrarProvisionamento($central, $empresaId, 'PROCESSANDO', $etapaAtual, 'Usuario dedicado do banco criado ou atualizado.');
+        registrarLogMaster('Criacao do usuario do banco', 'empresas', $empresaId, 'Usuario dedicado configurado para o banco ' . $nomeBanco, $central);
+    }
 
     $etapaAtual = 'Execucao do template';
     executarTemplateCliente($cliente, $templateSql);

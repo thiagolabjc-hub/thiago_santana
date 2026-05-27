@@ -760,6 +760,36 @@ a:hover {
     border-bottom: 0;
 }
 
+.form-section-title {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.form-section-title h2 {
+    margin: 0;
+}
+
+.info-popover-button {
+    display: inline-flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    color: var(--cor-principal);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+}
+
+.info-popover-button:hover,
+.info-popover-button:focus {
+    color: #ffffff;
+    background: var(--cor-principal);
+    border-color: var(--cor-principal);
+}
+
 .sticky-side {
     position: sticky;
     top: 96px;
@@ -867,6 +897,107 @@ a:hover {
     margin-top: 5px;
     color: var(--ink);
     overflow-wrap: anywhere;
+}
+
+.tenant-page {
+    min-height: 100vh;
+    background: #f3f8ff;
+}
+
+.tenant-shell {
+    display: grid;
+    min-height: 100vh;
+    place-items: center;
+    padding: 32px 16px;
+}
+
+.tenant-panel {
+    width: min(100%, 920px);
+    padding: 30px;
+    background: #ffffff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+}
+
+.tenant-brand {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.tenant-brand strong {
+    display: block;
+    font-size: 1.2rem;
+}
+
+.tenant-brand small,
+.tenant-heading p {
+    color: var(--muted);
+}
+
+.tenant-heading {
+    margin-bottom: 24px;
+}
+
+.tenant-heading h1 {
+    margin: 0 0 10px;
+    font-size: clamp(1.8rem, 3vw, 2.7rem);
+    font-weight: 800;
+}
+
+.tenant-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.connection-result {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 18px;
+    background: #f8fbff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.connection-result i {
+    margin-top: 3px;
+    font-size: 1.6rem;
+}
+
+.connection-ok {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.connection-ok i {
+    color: #16a34a;
+}
+
+.connection-erro,
+.connection-bloqueado {
+    background: #fff7ed;
+    border-color: #fed7aa;
+}
+
+.connection-erro i,
+.connection-bloqueado i {
+    color: #ea580c;
+}
+
+.connection-result h2 {
+    margin: 0 0 6px;
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.connection-result p {
+    margin: 0;
+    color: var(--muted);
 }
 
 @media (max-width: 991.98px) {

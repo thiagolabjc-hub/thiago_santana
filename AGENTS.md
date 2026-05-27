@@ -35,6 +35,15 @@ Se ainda nao houver comandos definidos, registre no resumo final que nenhuma ver
 - Nao criar subdominios, DNS, deploy automatico ou migracoes de sistemas de cliente nesta etapa.
 - Nunca salvar senhas temporarias em texto puro.
 
+## Arquitetura multi-tenant
+
+- O projeto usa banco master para gestao comercial.
+- Cada empresa pode ter banco proprio.
+- A conexao do cliente deve ser resolvida por slug, subdominio ou parametro de teste local.
+- Nunca misturar dados entre empresas.
+- Nunca exibir credenciais de banco em telas.
+- Nunca depender do SGP_AUTOCAD nesta etapa.
+
 ## Git
 
 - Verifique `git status --short` antes e depois das alteracoes.

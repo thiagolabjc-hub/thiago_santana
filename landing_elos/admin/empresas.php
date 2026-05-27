@@ -147,6 +147,7 @@ renderAdminTopo('Empresas');
                                         <?php else: ?>
                                             <a class="btn btn-outline-primary btn-sm" href="provisionar_empresa.php?id=<?= e($empresa['id']); ?>" title="Criar ambiente"><i class="fa-solid fa-circle-plus"></i></a>
                                         <?php endif; ?>
+                                        <a class="btn btn-outline-primary btn-sm" href="testar_conexao_empresa.php?id=<?= e($empresa['id']); ?>" title="Testar conexao"><i class="fa-solid fa-plug-circle-check"></i></a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -187,6 +188,7 @@ renderAdminTopo('Empresas');
                         <?php else: ?>
                             <a class="btn btn-outline-primary" href="provisionar_empresa.php?id=<?= e($empresa['id']); ?>">Criar Ambiente</a>
                         <?php endif; ?>
+                        <a class="btn btn-outline-primary" href="testar_conexao_empresa.php?id=<?= e($empresa['id']); ?>">Testar Conexao</a>
                         <a class="btn btn-primary" href="editar_empresa.php?id=<?= e($empresa['id']); ?>">Editar</a>
                     </div>
                 </div>

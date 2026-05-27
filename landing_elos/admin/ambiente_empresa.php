@@ -52,7 +52,13 @@ renderAdminTopo('Ambiente da Empresa');
                     <span class="section-kicker">Ambiente</span>
                     <h1>Ambiente da empresa</h1>
                 </div>
-                <a class="btn btn-outline-primary" href="empresas.php"><i class="fa-solid fa-arrow-left me-2"></i>Voltar</a>
+                <div class="admin-actions">
+                    <?php if ($empresa): ?>
+                        <a class="btn btn-outline-primary" href="../cliente/index.php?empresa=<?= e($empresa['slug']); ?>" target="_blank" rel="noopener"><i class="fa-solid fa-up-right-from-square me-2"></i>Testar area do cliente</a>
+                        <a class="btn btn-outline-primary" href="testar_conexao_empresa.php?id=<?= e($empresa['id']); ?>"><i class="fa-solid fa-plug-circle-check me-2"></i>Testar Conexao</a>
+                    <?php endif; ?>
+                    <a class="btn btn-outline-primary" href="empresas.php"><i class="fa-solid fa-arrow-left me-2"></i>Voltar</a>
+                </div>
             </div>
 
             <?php if (!empty($_GET['sucesso'])): ?>
@@ -84,6 +90,7 @@ renderAdminTopo('Ambiente da Empresa');
                                 <div><span>Admin inicial</span><strong><?= e($empresa['admin_cliente_nome'] ?: 'Nao definido'); ?></strong></div>
                                 <div><span>E-mail do admin</span><strong><?= e($empresa['admin_cliente_email'] ?: 'Nao definido'); ?></strong></div>
                                 <div><span>Plano</span><strong><?= e($empresa['nome_plano'] ?: 'Sem plano'); ?></strong></div>
+                                <div><span>Teste local cliente</span><strong><a href="../cliente/index.php?empresa=<?= e($empresa['slug']); ?>" target="_blank" rel="noopener">cliente/index.php?empresa=<?= e($empresa['slug']); ?></a></strong></div>
                             </div>
 
                             <?php if (!empty($empresa['erro_provisionamento'])): ?>
